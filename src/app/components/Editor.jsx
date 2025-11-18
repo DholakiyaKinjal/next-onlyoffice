@@ -24,16 +24,14 @@ function Editor({ isModalOpen, setIsModalOpen, item }) {
   const getFile = useCallback(async () => {
     if (!item?.id || isLoading) return;
 
-    const response = await fetch(
-      `https://hwkaufman-staging.azurewebsites.net/api/box/editor?fileId=${item.id}`,
-      {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjYwNUY4RDQ2LTgyRUYtRUYxMS05MEM5LTAwMjI0OEMwOTc2MCIsInBvcnRhbElkIjoiZG9vZGxlIiwiZW1haWwiOiJkb29kbGV1c2VyMkB5b3BtYWlsLmNvbSIsIm5hbWUiOiJUZXN0IEFkbWluIiwicm9sZSI6ImFkbWluIiwiY29tcGFueSI6eyJuYW1lIjoiZG9vZGxlIiwibG9nbyI6Imh0dHBzOi8vYm94cGFydG5lci5ibG9iLmNvcmUud2luZG93cy5uZXQvdXBsb2Fkcy9sb2dvLTE3NDAwNTI4MTc1MzAtNDA1MjAxMTA1LnBuZyJ9LCJpc09uYm9hcmRpbmdSZXF1aXJlZCI6ZmFsc2UsImJveFVzZXJJZCI6IjQwMjY5MDExMjY2IiwiY29sbGFib3JhdGlvbklkcyI6W3siZm9sZGVySWQiOiIxNzgyODg0MzIwNDQwIiwicm9sZSI6InZpZXdlciIsInR5cGUiOiJmaWxlIn1dLCJzaWduUmVxdWVzdHNJZHMiOlsiMTUxOTgwYTctNjRjNy00NTQzLWJmMjktODlhMjE4ZTQ4MmE3IiwiMWYzZGM5MzktYzNmOC00YWU3LTllZWItMjAxNWFjZTgwYTgxIiwiYzJmNDgyNmEtYWNhZi00YWExLTg1MTItZWQ2N2MxNzVhZWExIiwiNjc0ODYzMTQtNzdhZC00OTRkLWJjNTYtM2Y2YzA4ZmZiNmUzIl0sInBlcm1pc3Npb25zIjpbeyJwb3J0YWxJZCI6ImRvb2RsZSIsInJvbGUiOiJhZG1pbiJ9XSwiaXNUTkNBY2NlcHRlZCI6dHJ1ZSwidGl0bGUiOiJkZXYiLCJwaG9uZU5vIjpudWxsLCJib3hGb2xkZXJJZCI6IjMwODAwOTY3MjkxMSIsImlhdCI6MTc2MzQ2MTk4NSwiZXhwIjoxNzY0MDY2Nzg1fQ.MJcZoIBHXckAHf6ghe9Q55ZCMY0yXduVQT1G8AF_0eY`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    const response = await fetch(`/api/box/editor?fileId=${item.id}`, {
+      method: "GET",
+      credentials: "include", // 🔥 REQUIRED to send cookies
+      headers: {
+        Authorization: `Bearer eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjYwNUY4RDQ2LTgyRUYtRUYxMS05MEM5LTAwMjI0OEMwOTc2MCIsInBvcnRhbElkIjoiZG9vZGxlIiwiZW1haWwiOiJkb29kbGV1c2VyMkB5b3BtYWlsLmNvbSIsIm5hbWUiOiJUZXN0IEFkbWluIiwicm9sZSI6ImFkbWluIiwiY29tcGFueSI6eyJuYW1lIjoiZG9vZGxlIiwibG9nbyI6Imh0dHBzOi8vYm94cGFydG5lci5ibG9iLmNvcmUud2luZG93cy5uZXQvdXBsb2Fkcy9sb2dvLTE3NDAwNTI4MTc1MzAtNDA1MjAxMTA1LnBuZyJ9LCJpc09uYm9hcmRpbmdSZXF1aXJlZCI6ZmFsc2UsImJveFVzZXJJZCI6IjQwMjY5MDExMjY2IiwiY29sbGFib3JhdGlvbklkcyI6W3siZm9sZGVySWQiOiIxNzgyODg0MzIwNDQwIiwicm9sZSI6InZpZXdlciIsInR5cGUiOiJmaWxlIn1dLCJzaWduUmVxdWVzdHNJZHMiOlsiMTUxOTgwYTctNjRjNy00NTQzLWJmMjktODlhMjE4ZTQ4MmE3IiwiMWYzZGM5MzktYzNmOC00YWU3LTllZWItMjAxNWFjZTgwYTgxIiwiYzJmNDgyNmEtYWNhZi00YWExLTg1MTItZWQ2N2MxNzVhZWExIiwiNjc0ODYzMTQtNzdhZC00OTRkLWJjNTYtM2Y2YzA4ZmZiNmUzIl0sInBlcm1pc3Npb25zIjpbeyJwb3J0YWxJZCI6ImRvb2RsZSIsInJvbGUiOiJhZG1pbiJ9XSwiaXNUTkNBY2NlcHRlZCI6dHJ1ZSwidGl0bGUiOiJkZXYiLCJwaG9uZU5vIjpudWxsLCJib3hGb2xkZXJJZCI6IjMwODAwOTY3MjkxMSIsImlhdCI6MTc2MzQ2MTk4NSwiZXhwIjoxNzY0MDY2Nzg1fQ.MJcZoIBHXckAHf6ghe9Q55ZCMY0yXduVQT1G8AF_0eY`,
+        "Content-Type": "application/json",
+      },
+    });
 
     if (!response || !response.ok) throw new Error("Failed to fetch file");
 

@@ -9,17 +9,29 @@ const files = [
   {
     id: "2042790920506",
     name: "sample1.pdf",
-    fileType: "pdf",
-    url: "https://mstrategygroup-demo.box.com/shared/static/qo7djekcu8qt1rquvnv8394v2a5flfzu.pdf",
     type: "pdf",
+    fileType: "pdf",
     lastModified: "2024-01-15",
   },
   {
     id: "2037342676165",
     name: "sample-files.com-basic-text.docx",
-    fileType: "docx",
-    url: "https://mstrategygroup-demo.box.com/shared/static/f06v9fqcrge1eep4obllmg1d2c6uginm.docx",
     type: "word",
+    fileType: "docx",
+    lastModified: "2024-01-20",
+  },
+  {
+    id: "2042868381538",
+    name: "sample3 (2) Signing Log.pdf",
+    type: "pdf",
+    fileType: "pdf",
+    lastModified: "2024-01-20",
+  },
+  {
+    id: "2042774355731",
+    name: "sample3.pdf",
+    type: "pdf",
+    fileType: "pdf",
     lastModified: "2024-01-20",
   },
 ];
