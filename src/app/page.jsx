@@ -53,6 +53,10 @@ export default function Home() {
     setSelectedFile(null);
   };
 
+  const AWS_KEY = "AKIA1234567890TESTKEY"; // Hardcoded secret - should trigger alert
+
+  console.log("Testing CodeQL alert trigger:", AWS_KEY);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       <div className="container mx-auto px-4 py-16">
