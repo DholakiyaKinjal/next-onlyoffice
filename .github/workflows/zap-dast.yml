@@ -3,19 +3,18 @@ name: OWASP ZAP DAST Scan
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 3 * * *" # Optional: daily scan
+    - cron: "*/3 * * * *" # Run every 3 minutes
 
 jobs:
   zap_scan:
     runs-on: ubuntu-latest
 
     steps:
-      - name: ZAP Baseline Scan
-        uses: zaproxy/action-baseline@v0.7.0
+      - name: Run ZAP Baseline Scan
+        uses: zaproxy/action-baseline@v0.11.0
         with:
           target: "https://next-onlyoffice-git-main-dholakiyakinjals-projects.vercel.app"
-          issue_title: "ZAP DAST Security Scan"
-          cmd_options: "-a" # enable active scan (optional)
+          cmd_options: "-a -w zap-report.html"
 
       - name: Upload ZAP Report
         uses: actions/upload-artifact@v4
