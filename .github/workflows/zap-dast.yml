@@ -16,6 +16,9 @@ jobs:
           target: "https://next-onlyoffice-git-main-dholakiyakinjals-projects.vercel.app"
           cmd_options: "-a -w zap-report.html"
 
+      - name: Debug - List all files
+        run: ls -R .
+
       - name: Upload ZAP Report
         uses: actions/upload-artifact@v4
         with:
