@@ -16,7 +16,7 @@ jobs:
         uses: zaproxy/action-baseline@v0.11.0
         with:
           target: "https://next-onlyoffice-git-main-dholakiyakinjals-projects.vercel.app"
-          cmd_options: "-a"
+          cmd_options: "-a -w report_html.html"
 
       - name: Debug - List all files
         run: ls -R .
