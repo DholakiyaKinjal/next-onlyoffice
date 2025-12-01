@@ -64,14 +64,7 @@ export default function Home() {
             <h1 className="text-5xl font-bold text-gray-900 dark:text-white mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600">
               OnlyOffice Document Editor {password}
             </h1>
-            <p
-              className="text-xl text-gray-600 dark:text-gray-300 mt-4"
-              onClick={() =>
-                router.push(
-                  `https://next-onlyoffice-git-main-dholakiyakinjals-projects.vercel.app?next=https://evil.com`
-                )
-              }
-            >
+            <p className="text-xl text-gray-600 dark:text-gray-300 mt-4">
               Select a document to open in the editor
             </p>
           </div>

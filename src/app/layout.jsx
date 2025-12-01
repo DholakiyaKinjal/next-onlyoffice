@@ -14,7 +14,6 @@ export default function RootLayout({ children }) {
           src="https://mstrategy-onlyoffice.azurewebsites.net/web-apps/apps/api/documents/api.js"
           strategy="afterInteractive"
         />
-        <script>alert('xss')</script>
         {children}
       </body>
     </html>
