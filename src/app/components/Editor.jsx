@@ -250,7 +250,7 @@ function Editor({ isModalOpen, setIsModalOpen, item, selectedItem }) {
         .setIssuedAt()
         .setExpirationTime("1h")
         .sign(secretKey);
-      
+
       setToken(jwtToken);
 
       // Destroy existing editor instance if it exists
@@ -263,7 +263,7 @@ function Editor({ isModalOpen, setIsModalOpen, item, selectedItem }) {
       }
 
       console.log("editor.current Before", editorRef.current);
-      console.log("token", token);
+      console.log("token", jwtToken);
 
       // Initialize new editor instance
       editorRef.current = new window.DocsAPI.DocEditor("onlyoffice-editor", {
