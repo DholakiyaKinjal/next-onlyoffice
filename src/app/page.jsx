@@ -53,9 +53,7 @@ export default function Home() {
     setSelectedFile(null);
   };
 
-  const AWS_KEY = "AKIA1234567890TESTKEY"; // Hardcoded secret - should trigger alert
-
-  console.log("Testing CodeQL alert trigger:", AWS_KEY);
+  const password = "SuperSecret123!"; // Hardcoded secret - should trigger alert
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
@@ -64,7 +62,7 @@ export default function Home() {
           {/* Header Section */}
           <div className="text-center mb-12">
             <h1 className="text-5xl font-bold text-gray-900 dark:text-white mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600">
-              OnlyOffice Document Editor 123
+              OnlyOffice Document Editor 123 {password}
             </h1>
             <p className="text-xl text-gray-600 dark:text-gray-300 mt-4">
               Select a document to open in the editor
