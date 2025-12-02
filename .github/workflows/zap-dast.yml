@@ -33,7 +33,8 @@ jobs:
       - name: Generate SBOM
         run: syft dir:./ --output cyclonedx-json > sbom.json
 
-      - uses: actions/upload-artifact@v3
+      - name: Upload SBOM Report
+        uses: actions/upload-artifact@v4
         with:
           name: sbom
           path: sbom.json
