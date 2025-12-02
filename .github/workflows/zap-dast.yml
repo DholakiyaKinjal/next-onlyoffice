@@ -44,7 +44,7 @@ jobs:
           path: sbom.json
 
       - name: Run Semgrep Scan
-        uses: returntocorp/semgrep-action@v2
+        uses: returntocorp/semgrep-action@v1
         with:
           config: "p/ci" # Predefined security rules from Semgrep
           fail: "false" # Fail the build if any vulnerabilities are found
