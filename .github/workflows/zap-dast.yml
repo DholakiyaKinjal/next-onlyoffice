@@ -27,12 +27,13 @@ jobs:
           name: zap-reports
           path: report_html.html
 
-      - name: Install Syft
-        uses: anchore/syft-action@v1
-
       - name: Generate SBOM
-        run: syft dir:./ --output cyclonedx-json > sbom.json
+        uses: anchore/sbom-action@v0.14.3
+        with:
+          format: cyclonedx-json
+          output-file: sbom.json
 
+      # Upload SBOM
       - name: Upload SBOM Report
         uses: actions/upload-artifact@v4
         with:
