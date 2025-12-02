@@ -10,6 +10,9 @@ on:
 jobs:
   security:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
 
     steps:
       - name: Checkout code
@@ -43,39 +46,95 @@ jobs:
           name: sbom
           path: sbom.json
 
-      - name: Vulnerability Scan with Grype
-        id: grype
-        uses: anchore/scan-action@v3
+      - name: Vulnerability Scan with Trivy (Filesystem)
+        uses: aquasecurity/trivy-action@master
         with:
-          sbom: sbom.json
-          output-format: json
-          output-file: grype-report.json
-          fail-build: false
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-fs-results.sarif'
+          severity: 'CRITICAL,HIGH,MEDIUM'
+          exit-code: '0' # Don't fail the build
 
-      - name: Debug Grype Output
+      - name: Vulnerability Scan with Trivy (Dependencies)
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'json'
+          output: 'trivy-deps-results.json'
+          severity: 'CRITICAL,HIGH,MEDIUM'
+          exit-code: '0' # Don't fail the build
+
+      - name: Display Trivy Results Summary
         run: |
-          if [ -f grype-report.json ]; then
-            echo "Grype report file exists"
-            echo "Report size: $(wc -l < grype-report.json) lines"
-            echo "First 500 characters of report:"
-            head -c 500 grype-report.json
+          if [ -f trivy-deps-results.json ]; then
+            echo "=== Trivy Vulnerability Summary ==="
+            echo "Total vulnerabilities found:"
+            jq -r '.Results[]?.Vulnerabilities | length' trivy-deps-results.json 2>/dev/null | awk '{sum+=$1} END {print sum}' || echo "0"
             echo ""
-            echo "Vulnerability count:"
-            jq -r '.matches | length' grype-report.json 2>/dev/null || echo "Could not parse JSON"
+            echo "Critical/High severity vulnerabilities:"
+            jq -r '.Results[]?.Vulnerabilities[]? | select(.Severity == "CRITICAL" or .Severity == "HIGH") | "\(.Severity): \(.VulnerabilityID) - \(.PkgName)@\(.InstalledVersion)"' trivy-deps-results.json 2>/dev/null | head -20 || echo "None found"
           else
-            echo "ERROR: grype-report.json not found"
+            echo "ERROR: trivy-deps-results.json not found"
           fi
 
-      - name: Upload Grype Report
+      - name: Upload Trivy SARIF Report
         uses: actions/upload-artifact@v4
         with:
-          name: grype-report
-          path: grype-report.json
+          name: trivy-sarif-report
+          path: trivy-fs-results.sarif
+
+      - name: Upload Trivy JSON Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-json-report
+          path: trivy-deps-results.json
+
+      - name: Upload Trivy SARIF to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: trivy-fs-results.sarif
+          category: 'trivy-fs'
 
       - name: Run Semgrep Scan
         uses: returntocorp/semgrep-action@v1
         with:
-          config: "p/security-audit,p/owasp-top-ten,p/javascript" # Comprehensive security rules
-          fail: "false" # Don't fail the build if vulnerabilities are found
-          sarif: "true" # Upload results to GitHub Security Tab
-          generateSarif: "1.0.0" # SARIF format version
+          config: "p/security-audit,p/owasp-top-ten,p/javascript"
+          args: >-
+            --sarif
+            --output=semgrep-results.sarif
+            --error
+            --disable-version-check
+            --no-git-ignore
+            --metrics=off
+
+      - name: Display Semgrep Results
+        if: always()
+        run: |
+          if [ -f semgrep-results.sarif ]; then
+            echo "=== Semgrep Scan Results ==="
+            echo "SARIF file size: $(wc -l < semgrep-results.sarif) lines"
+            echo "Findings count:"
+            jq -r '.runs[0].results | length' semgrep-results.sarif 2>/dev/null || echo "Could not parse SARIF"
+            echo ""
+            echo "Sample findings (first 5):"
+            jq -r '.runs[0].results[0:5] | .[] | "\(.ruleId): \(.message.text) - \(.locations[0].physicalLocation.artifactLocation.uri):\(.locations[0].physicalLocation.region.startLine)"' semgrep-results.sarif 2>/dev/null || echo "Could not parse findings"
+          else
+            echo "WARNING: semgrep-results.sarif not found"
+          fi
+
+      - name: Upload Semgrep SARIF Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: semgrep-sarif-report
+          path: semgrep-results.sarif
+
+      - name: Upload Semgrep SARIF to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: semgrep-results.sarif
+          category: 'semgrep'
