@@ -26,3 +26,6 @@ jobs:
         with:
           name: zap-reports
           path: report_html.html
+
+      - name: Export GitHub SBOM
+        run: gh api repos/$GITHUB_REPOSITORY/dependency-graph/sbom > sbom.json
