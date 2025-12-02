@@ -1,25 +1,28 @@
-name: OWASP ZAP DAST Scan
+name: OWASP ZAP + SBOM + Vulnerability Scan
 
 on:
   workflow_dispatch:
   push:
     branches: ["main"]
   schedule:
-    - cron: "0 3 * * *" # daily scan at 3 AM
+    - cron: "0 3 * * *"
 
 jobs:
-  zap_scan:
+  security:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: npm install
+
       - name: ZAP Baseline Scan
         uses: zaproxy/action-baseline@v0.11.0
         with:
           target: "https://next-onlyoffice-git-main-dholakiyakinjals-projects.vercel.app"
           cmd_options: "-a -w report_html.html"
-
-      - name: Debug - List all files
-        run: ls -R .
 
       - name: Upload ZAP Report
         uses: actions/upload-artifact@v4
@@ -34,8 +37,14 @@ jobs:
           output-file: sbom.json
           upload-artifact: false
 
-      - name: Upload SBOM Report
+      - name: Upload SBOM
         uses: actions/upload-artifact@v4
         with:
           name: sbom
           path: sbom.json
+
+      - name: Vulnerability Scan with Grype
+        uses: anchore/scan-action@v3
+        with:
+          sbom: sbom.json
+          fail-build: false
