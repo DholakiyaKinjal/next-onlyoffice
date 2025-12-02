@@ -16,7 +16,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install dependencies
-        run: npm install
+        run: yarn install
 
       - name: ZAP Baseline Scan
         uses: zaproxy/action-baseline@v0.11.0
@@ -44,16 +44,12 @@ jobs:
           path: sbom.json
 
       - name: Vulnerability Scan with Grype
-        id: grype
         uses: anchore/scan-action@v3
         with:
           path: .
           output-format: json
-          # output-file: grype-report.json
+          output: grype-report.json
           fail-build: false
-
-      - name: Debug Grype Output
-        run: echo "${{ steps.grype.outputs.report }}" > grype-report.json
 
       - name: Upload Grype Report
         uses: actions/upload-artifact@v4
