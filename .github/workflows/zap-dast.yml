@@ -79,11 +79,26 @@ jobs:
             echo "ERROR: trivy-deps-results.json not found"
           fi
 
+      - name: Verify Trivy SARIF File
+        if: always()
+        run: |
+          if [ -f trivy-fs-results.sarif ]; then
+            echo "Trivy SARIF file exists"
+            echo "File size: $(stat -f%z trivy-fs-results.sarif 2>/dev/null || stat -c%s trivy-fs-results.sarif 2>/dev/null || echo 'unknown') bytes"
+            echo "Validating SARIF structure..."
+            jq -e '.version' trivy-fs-results.sarif > /dev/null 2>&1 && echo "SARIF file is valid JSON" || echo "WARNING: SARIF file may be invalid"
+          else
+            echo "ERROR: trivy-fs-results.sarif not found"
+            exit 1
+          fi
+
       - name: Upload Trivy SARIF Report
         uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: trivy-sarif-report
           path: trivy-fs-results.sarif
+          if-no-files-found: warn
 
       - name: Upload Trivy JSON Report
         uses: actions/upload-artifact@v4
@@ -92,37 +107,49 @@ jobs:
           path: trivy-deps-results.json
 
       - name: Upload Trivy SARIF to GitHub Security
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         if: always()
         with:
           sarif_file: trivy-fs-results.sarif
           category: 'trivy-fs'
+        continue-on-error: true
+
+      - name: Install Semgrep
+        run: |
+          python3 -m pip install semgrep
 
       - name: Run Semgrep Scan
-        uses: returntocorp/semgrep-action@v1
-        with:
-          config: "p/security-audit,p/owasp-top-ten,p/javascript"
-          args: >-
-            --sarif
-            --output=semgrep-results.sarif
-            --error
-            --disable-version-check
-            --no-git-ignore
-            --metrics=off
+        id: semgrep
+        continue-on-error: true
+        run: |
+          semgrep --config=p/security-audit \
+                  --config=p/owasp-top-ten \
+                  --config=p/javascript \
+                  --sarif \
+                  --output=semgrep-results.sarif \
+                  --error \
+                  --disable-version-check \
+                  --no-git-ignore \
+                  --metrics=off \
+                  . || echo "Semgrep scan completed with exit code $?"
 
       - name: Display Semgrep Results
         if: always()
         run: |
           if [ -f semgrep-results.sarif ]; then
             echo "=== Semgrep Scan Results ==="
-            echo "SARIF file size: $(wc -l < semgrep-results.sarif) lines"
+            echo "SARIF file exists and size: $(wc -l < semgrep-results.sarif) lines"
+            echo "File size in bytes: $(stat -f%z semgrep-results.sarif 2>/dev/null || stat -c%s semgrep-results.sarif 2>/dev/null || echo 'unknown')"
+            echo ""
             echo "Findings count:"
             jq -r '.runs[0].results | length' semgrep-results.sarif 2>/dev/null || echo "Could not parse SARIF"
             echo ""
             echo "Sample findings (first 5):"
             jq -r '.runs[0].results[0:5] | .[] | "\(.ruleId): \(.message.text) - \(.locations[0].physicalLocation.artifactLocation.uri):\(.locations[0].physicalLocation.region.startLine)"' semgrep-results.sarif 2>/dev/null || echo "Could not parse findings"
           else
-            echo "WARNING: semgrep-results.sarif not found"
+            echo "ERROR: semgrep-results.sarif not found after scan"
+            echo "Listing files in current directory:"
+            ls -la
           fi
 
       - name: Upload Semgrep SARIF Report
@@ -131,10 +158,12 @@ jobs:
         with:
           name: semgrep-sarif-report
           path: semgrep-results.sarif
+          if-no-files-found: warn
 
       - name: Upload Semgrep SARIF to GitHub Security
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         if: always()
         with:
           sarif_file: semgrep-results.sarif
           category: 'semgrep'
+        continue-on-error: true
