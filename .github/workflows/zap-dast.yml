@@ -32,12 +32,10 @@ jobs:
         with:
           format: cyclonedx-json
           output-file: sbom.json
-
-      - name: Rename SBOM (Fix invalid artifact name)
-        run: mv sbom.json sbom_report.json
+          upload-artifact: false
 
       - name: Upload SBOM Report
         uses: actions/upload-artifact@v4
         with:
-          name: sbom-report
-          path: sbom_report.json
+          name: sbom
+          path: sbom.json
