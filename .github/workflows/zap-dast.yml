@@ -43,11 +43,17 @@ jobs:
           name: sbom
           path: sbom.json
 
-      - name: Install Grype CLI
-        run: curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh
-
       - name: Vulnerability Scan with Grype
-        run: ./grype sbom:sbom.json -o json > grype-report.json
+        id: grype
+        uses: anchore/scan-action@v3
+        with:
+          path: sbom.json
+          output-format: json
+          # output-file: grype-report.json
+          fail-build: false
+
+      - name: Debug Grype Output
+        run: echo "${{ steps.grype.outputs.report }}" > grype-report.json
 
       - name: Upload Grype Report
         uses: actions/upload-artifact@v4
