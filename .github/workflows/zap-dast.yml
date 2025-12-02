@@ -44,7 +44,16 @@ jobs:
           path: sbom.json
 
       - name: Vulnerability Scan with Grype
+        id: grype
         uses: anchore/scan-action@v3
         with:
           sbom: sbom.json
+          output-format: json
+          output-file: grype-report.json
           fail-build: false
+
+      - name: Upload Grype Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: grype-report
+          path: grype-report.json
