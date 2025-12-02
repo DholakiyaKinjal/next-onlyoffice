@@ -47,7 +47,7 @@ jobs:
         id: grype
         uses: anchore/scan-action@v3
         with:
-          path: sbom.json
+          path: .
           output-format: json
           # output-file: grype-report.json
           fail-build: false
