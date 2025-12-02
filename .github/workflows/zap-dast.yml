@@ -21,6 +21,7 @@ jobs:
       - name: Install dependencies
         run: yarn install
 
+      # DAST(ZAP)
       - name: ZAP Baseline Scan
         uses: zaproxy/action-baseline@v0.11.0
         with:
@@ -30,9 +31,10 @@ jobs:
       - name: Upload ZAP Report
         uses: actions/upload-artifact@v4
         with:
-          name: zap-reports
+          name: DAST (ZAP)
           path: report_html.html
 
+      # SBOM
       - name: Generate SBOM
         uses: anchore/sbom-action@v0.14.3
         with:
@@ -43,67 +45,42 @@ jobs:
       - name: Upload SBOM
         uses: actions/upload-artifact@v4
         with:
-          name: sbom
+          name: SBOM
           path: sbom.json
 
+      # Trivy (Container immage and package scanning)
       - name: Vulnerability Scan with Trivy (Filesystem)
         uses: aquasecurity/trivy-action@master
         with:
-          scan-type: 'fs'
-          scan-ref: '.'
-          format: 'sarif'
-          output: 'trivy-fs-results.sarif'
-          severity: 'CRITICAL,HIGH,MEDIUM'
-          exit-code: '0' # Don't fail the build
+          scan-type: "fs"
+          scan-ref: "."
+          format: "sarif"
+          output: "trivy-fs-results.sarif"
+          severity: "CRITICAL,HIGH,MEDIUM"
+          exit-code: "0" # Don't fail the build
 
       - name: Vulnerability Scan with Trivy (Dependencies)
         uses: aquasecurity/trivy-action@master
         with:
-          scan-type: 'fs'
-          scan-ref: '.'
-          format: 'json'
-          output: 'trivy-deps-results.json'
-          severity: 'CRITICAL,HIGH,MEDIUM'
-          exit-code: '0' # Don't fail the build
-
-      - name: Display Trivy Results Summary
-        run: |
-          if [ -f trivy-deps-results.json ]; then
-            echo "=== Trivy Vulnerability Summary ==="
-            echo "Total vulnerabilities found:"
-            jq -r '.Results[]?.Vulnerabilities | length' trivy-deps-results.json 2>/dev/null | awk '{sum+=$1} END {print sum}' || echo "0"
-            echo ""
-            echo "Critical/High severity vulnerabilities:"
-            jq -r '.Results[]?.Vulnerabilities[]? | select(.Severity == "CRITICAL" or .Severity == "HIGH") | "\(.Severity): \(.VulnerabilityID) - \(.PkgName)@\(.InstalledVersion)"' trivy-deps-results.json 2>/dev/null | head -20 || echo "None found"
-          else
-            echo "ERROR: trivy-deps-results.json not found"
-          fi
-
-      - name: Verify Trivy SARIF File
-        if: always()
-        run: |
-          if [ -f trivy-fs-results.sarif ]; then
-            echo "Trivy SARIF file exists"
-            echo "File size: $(stat -f%z trivy-fs-results.sarif 2>/dev/null || stat -c%s trivy-fs-results.sarif 2>/dev/null || echo 'unknown') bytes"
-            echo "Validating SARIF structure..."
-            jq -e '.version' trivy-fs-results.sarif > /dev/null 2>&1 && echo "SARIF file is valid JSON" || echo "WARNING: SARIF file may be invalid"
-          else
-            echo "ERROR: trivy-fs-results.sarif not found"
-            exit 1
-          fi
+          scan-type: "fs"
+          scan-ref: "."
+          format: "json"
+          output: "trivy-deps-results.json"
+          severity: "CRITICAL,HIGH,MEDIUM"
+          exit-code: "0" # Don't fail the build
 
       - name: Upload Trivy SARIF Report
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: trivy-sarif-report
+          name: Vulnerability Scan (SARIF)
           path: trivy-fs-results.sarif
           if-no-files-found: warn
 
       - name: Upload Trivy JSON Report
         uses: actions/upload-artifact@v4
         with:
-          name: trivy-json-report
+          name: Vulnerability Scan (JSON)
           path: trivy-deps-results.json
 
       - name: Upload Trivy SARIF to GitHub Security
@@ -111,9 +88,10 @@ jobs:
         if: always()
         with:
           sarif_file: trivy-fs-results.sarif
-          category: 'trivy-fs'
+          category: "trivy-fs"
         continue-on-error: true
 
+      # SemGrep (Code Vulnerability)
       - name: Install Semgrep
         run: |
           python3 -m pip install semgrep
@@ -131,26 +109,7 @@ jobs:
                   --disable-version-check \
                   --no-git-ignore \
                   --metrics=off \
-                  . || echo "Semgrep scan completed with exit code $?"
-
-      - name: Display Semgrep Results
-        if: always()
-        run: |
-          if [ -f semgrep-results.sarif ]; then
-            echo "=== Semgrep Scan Results ==="
-            echo "SARIF file exists and size: $(wc -l < semgrep-results.sarif) lines"
-            echo "File size in bytes: $(stat -f%z semgrep-results.sarif 2>/dev/null || stat -c%s semgrep-results.sarif 2>/dev/null || echo 'unknown')"
-            echo ""
-            echo "Findings count:"
-            jq -r '.runs[0].results | length' semgrep-results.sarif 2>/dev/null || echo "Could not parse SARIF"
-            echo ""
-            echo "Sample findings (first 5):"
-            jq -r '.runs[0].results[0:5] | .[] | "\(.ruleId): \(.message.text) - \(.locations[0].physicalLocation.artifactLocation.uri):\(.locations[0].physicalLocation.region.startLine)"' semgrep-results.sarif 2>/dev/null || echo "Could not parse findings"
-          else
-            echo "ERROR: semgrep-results.sarif not found after scan"
-            echo "Listing files in current directory:"
-            ls -la
-          fi
+                  .
 
       - name: Upload Semgrep SARIF Report
         uses: actions/upload-artifact@v4
@@ -165,5 +124,5 @@ jobs:
         if: always()
         with:
           sarif_file: semgrep-results.sarif
-          category: 'semgrep'
+          category: "semgrep"
         continue-on-error: true
