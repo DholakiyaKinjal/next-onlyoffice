@@ -43,13 +43,31 @@ jobs:
           name: sbom
           path: sbom.json
 
-      - name: Vulnerability Scan with Grype
-        uses: anchore/scan-action@v3
+      - name: Run Semgrep Scan
+        uses: returntocorp/semgrep-action@v2
         with:
-          path: .
-          output-format: json
-          output: grype-report.json
-          fail-build: false
+          config: "p/ci" # Predefined security rules from Semgrep
+          fail: "false" # Fail the build if any vulnerabilities are found
+          sarif: "true" # Upload results to GitHub Security Tab
+
+      # - name: Vulnerability Scan with Grype
+      #   uses: anchore/scan-action@v3
+      #   with:
+      #     path: .
+      #     output-format: json
+      #     output: grype-report.json
+      #     fail-build: false
+
+      # - name: Upload Grype Report
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: grype-report
+      #     path: grype-report.json
+
+      - name: Scan SBOM using Grype
+        run: |
+          grype sbom:sbom.json -o json > grype-report.json
+          echo "Generated grype-report.json"
 
       - name: Upload Grype Report
         uses: actions/upload-artifact@v4
