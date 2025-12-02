@@ -49,16 +49,22 @@ jobs:
         with:
           sbom: sbom.json
           output-format: json
+          output-file: grype-report.json
           fail-build: false
 
       - name: Debug Grype Output
         run: |
-          echo "Summary: ${{ steps.grype.outputs.summary }}"
-          echo "Report: ${{ steps.grype.outputs.report }}"
-          echo "Vulnerabilities: ${{ steps.grype.outputs.vulnerabilities }}"
-
-      - name: Save Grype Report
-        run: echo '${{ steps.grype.outputs.report }}' > grype-report.json
+          if [ -f grype-report.json ]; then
+            echo "Grype report file exists"
+            echo "Report size: $(wc -l < grype-report.json) lines"
+            echo "First 500 characters of report:"
+            head -c 500 grype-report.json
+            echo ""
+            echo "Vulnerability count:"
+            jq -r '.matches | length' grype-report.json 2>/dev/null || echo "Could not parse JSON"
+          else
+            echo "ERROR: grype-report.json not found"
+          fi
 
       - name: Upload Grype Report
         uses: actions/upload-artifact@v4
@@ -69,6 +75,7 @@ jobs:
       - name: Run Semgrep Scan
         uses: returntocorp/semgrep-action@v1
         with:
-          config: "p/ci" # Predefined security rules from Semgrep
-          fail: "false" # Fail the build if any vulnerabilities are found
+          config: "p/security-audit,p/owasp-top-ten,p/javascript" # Comprehensive security rules
+          fail: "false" # Don't fail the build if vulnerabilities are found
           sarif: "true" # Upload results to GitHub Security Tab
+          generateSarif: "1.0.0" # SARIF format version
